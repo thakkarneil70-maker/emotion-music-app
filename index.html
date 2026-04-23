@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Emotion Music Recommender</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <h1>🎭 Emotion Music Recommender</h1>
+
+  <div class="container">
+  <div class="card row">
+
+    <!-- LEFT: CAMERA -->
+    <div class="left">
+      <button onclick="init()">Start Camera</button>
+      <div id="webcam-container"></div>
+      <div id="result">Emotion: Waiting...</div>
+      <div id="status">Detecting...</div>
+    </div>
+
+    <!-- RIGHT: MUSIC -->
+    <div class="right">
+      <h2>🎵 Recommended Music</h2>
+      <div id="music"></div>
+    </div>
+
+  </div>
+</div>
+
+  <div class="footer">
+    🔒 Privacy Safe: No data is stored or shared
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
