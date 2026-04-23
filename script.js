@@ -1,41 +1,35 @@
-const URL = "https://teachablemachine.withgoogle.com/models/Yhvi7tG-_/"; // 🔴 IMPORTANT
+const URL = "https://teachablemachine.withgoogle.com/models/Yhvi7tG-_/";
 
 let model, webcam;
-
-// stability system
-let emotionBuffer = [];
-let bufferSize = 20;
-let lastEmotion = "";
-let cooldown = false;
 
 // ================= INIT CAMERA =================
 async function init() {
     try {
         console.log("Init started");
 
-        if (webcam) {
-            alert("Camera already started!");
-            return;
-        }
+        if (webcam) return;
 
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
 
-        console.log("Loading model...");
         model = await tmImage.load(modelURL, metadataURL);
         console.log("Model loaded");
 
         webcam = new tmImage.Webcam(300, 300, true);
-
         await webcam.setup();
         await webcam.play();
 
         document.getElementById("webcam-container").innerHTML = "";
         document.getElementById("webcam-container").appendChild(webcam.canvas);
 
-        window.requestAnimationFrame(loop);
+        // Disable button
+        document.getElementById("startBtn").disabled = true;
+        document.getElementById("startBtn").innerText = "Camera Active";
 
-        console.log("Camera started");
+        // Initial status
+        document.getElementById("status").innerText = "Analyzing mood...";
+
+        window.requestAnimationFrame(loop);
 
     } catch (error) {
         console.error(error);
@@ -50,14 +44,14 @@ async function loop() {
 
     setTimeout(() => {
         window.requestAnimationFrame(loop);
-    }, 200);
+    }, 200); // slower = stable
 }
 
-// ================= PREDICT =================
+// ================= PREDICTION SYSTEM =================
 let currentEmotion = "";
 let candidateEmotion = "";
 let stableTime = 0;
-let requiredTime = 1500; // 1.5 sec
+let requiredTime = 1500;
 let lastUpdateTime = Date.now();
 
 async function predict() {
@@ -71,16 +65,17 @@ async function predict() {
 
     let gap = top1.probability - top2.probability;
 
-    // 🧠 Only accept strong winner
-    if (gap < 0.2) {
-        return; // ignore weak/confusing frames
+    // 🧠 Ignore weak/confusing predictions
+    if (gap < 0.1 && top1.probability < 0.5) {
+        document.getElementById("result").innerText = "Emotion: Detecting...";
+        document.getElementById("status").innerText = "Trying to understand mood...";
+        return;
     }
 
     let emotion = top1.className;
-
     let now = Date.now();
 
-    // ⏱️ stability check
+    // stability logic
     if (emotion === candidateEmotion) {
         stableTime += (now - lastUpdateTime);
     } else {
@@ -90,26 +85,28 @@ async function predict() {
 
     lastUpdateTime = now;
 
-    // ✅ Only confirm if stable for required time
+    // confirm stable emotion
     if (stableTime > requiredTime && candidateEmotion !== currentEmotion) {
         currentEmotion = candidateEmotion;
 
         console.log("Confirmed Emotion:", currentEmotion);
 
-        // 🎯 Update UI
+        // UI update
         document.getElementById("result").innerText =
             "Emotion: " + currentEmotion;
 
-        // 🎨 Background change
+        document.getElementById("status").innerText =
+            "Analyzing mood...";
+
+        // background color
         document.body.style.backgroundColor =
             currentEmotion === "BigSmile" ? "#ffe066" :
             currentEmotion === "Angry" ? "#ff6b6b" :
             "#ffffff";
 
-        // 🎵 Play music
+        // play music
         showMusic(currentEmotion);
     }
-    console.log(prediction);
 }
 
 // ================= MUSIC =================
@@ -119,17 +116,19 @@ function showMusic(emotion) {
     if (emotion === "BigSmile") {
         musicDiv.innerHTML = `
         <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/ZbZSe6N_BXs"></iframe>`;
+        src="https://www.youtube.com/embed/ZbZSe6N_BXs"
+        allow="autoplay"></iframe>`;
     }
     else if (emotion === "Angry") {
         musicDiv.innerHTML = `
         <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/2Vv-BfVoq4g"></iframe>`;
+        src="https://www.youtube.com/embed/2Vv-BfVoq4g"
+        allow="autoplay"></iframe>`;
     }
     else {
         musicDiv.innerHTML = `
         <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/5qap5aO4i9A"></iframe>`;
+        src="https://www.youtube.com/embed/5qap5aO4i9A"
+        allow="autoplay"></iframe>`;
     }
 }
-document.getElementById("status").innerText = "Analyzing mood...";
