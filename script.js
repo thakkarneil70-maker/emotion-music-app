@@ -117,6 +117,8 @@ async function predict() {
 }
 
 // ================= MUSIC =================
+let lastVideo = "";
+
 function showMusic(emotion) {
     let musicDiv = document.getElementById("music");
 
@@ -132,14 +134,15 @@ function showMusic(emotion) {
         videoURL = "https://www.youtube.com/embed/Lc9L3uAdcxo";
     }
 
-    // 🔥 FORCE REFRESH (important)
-    musicDiv.innerHTML = "";
+    // 🚫 Prevent unnecessary reload
+    if (videoURL === lastVideo) return;
 
-    setTimeout(() => {
-        musicDiv.innerHTML = `
-        <iframe width="350" height="220"
-        src="${videoURL}?autoplay=1"
-        allow="autoplay; encrypted-media"
-        allowfullscreen></iframe>`;
-    }, 100);
+    lastVideo = videoURL;
+
+    // ✅ Clean update (no timeout, no flicker)
+    musicDiv.innerHTML = `
+    <iframe width="350" height="220"
+    src="${videoURL}?autoplay=1"
+    allow="autoplay; encrypted-media"
+    allowfullscreen></iframe>`;
 }
