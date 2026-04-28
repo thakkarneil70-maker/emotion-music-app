@@ -120,25 +120,26 @@ async function predict() {
 function showMusic(emotion) {
     let musicDiv = document.getElementById("music");
 
+    let videoURL = "";
+
     if (emotion === "BigSmile") {
-        musicDiv.innerHTML = `
-        <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/j_3C0z96GE0"
-        allow="autoplay; encrypted-media"
-        allowfullscreen></iframe>`;
+        videoURL = "https://www.youtube.com/embed/j_3C0z96GE0";
     }
     else if (emotion === "Angry") {
-        musicDiv.innerHTML = `
-        <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/ZbZSe6N_BXs"
-        allow="autoplay; encrypted-media"
-        allowfullscreen></iframe>`;
+        videoURL = "https://www.youtube.com/embed/ZbZSe6N_BXs";
     }
     else {
+        videoURL = "https://www.youtube.com/embed/Lc9L3uAdcxo";
+    }
+
+    // 🔥 FORCE REFRESH (important)
+    musicDiv.innerHTML = "";
+
+    setTimeout(() => {
         musicDiv.innerHTML = `
         <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/Lc9L3uAdcxo"
+        src="${videoURL}?autoplay=1"
         allow="autoplay; encrypted-media"
         allowfullscreen></iframe>`;
-    }
+    }, 100);
 }
