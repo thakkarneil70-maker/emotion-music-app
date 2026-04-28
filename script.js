@@ -116,19 +116,19 @@ function showMusic(emotion) {
     if (emotion === "BigSmile") {
         musicDiv.innerHTML = `
         <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/ZbZSe6N_BXs"
+        src="https://www.youtube.com/embed/j_3C0z96GE0&list=RDj_3C0z96GE0&start_radio=1"
         allow="autoplay"></iframe>`;
     }
     else if (emotion === "Angry") {
         musicDiv.innerHTML = `
         <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/2Vv-BfVoq4g"
+        src="https://www.youtube.com/embed/ZbZSe6N_BXs&list=RDZbZSe6N_BXs&start_radio=1"
         allow="autoplay"></iframe>`;
     }
     else {
         musicDiv.innerHTML = `
         <iframe width="350" height="220"
-        src="https://www.youtube.com/embed/5qap5aO4i9A"
+        src="https://www.youtube.com/embed/Lc9L3uAdcxo&list=RDLc9L3uAdcxo&start_radio=1"
         allow="autoplay"></iframe>`;
     }
 }
