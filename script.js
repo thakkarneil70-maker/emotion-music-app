@@ -5,15 +5,12 @@ let model, webcam;
 // ================= INIT CAMERA =================
 async function init() {
     try {
-        console.log("Init started");
-
         if (webcam) return;
 
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
 
         model = await tmImage.load(modelURL, metadataURL);
-        console.log("Model loaded");
 
         webcam = new tmImage.Webcam(300, 300, true);
         await webcam.setup();
@@ -22,7 +19,6 @@ async function init() {
         document.getElementById("webcam-container").innerHTML = "";
         document.getElementById("webcam-container").appendChild(webcam.canvas);
 
-        // Disable button
         document.getElementById("startBtn").disabled = true;
         document.getElementById("startBtn").innerText = "Camera Active";
 
@@ -46,11 +42,11 @@ async function loop() {
     }, 200);
 }
 
-// ================= PREDICTION SYSTEM =================
+// ================= PREDICTION =================
 let currentEmotion = "";
 let candidateEmotion = "";
 let stableTime = 0;
-let requiredTime = 1500;
+let requiredTime = 800; // faster + stable
 let lastUpdateTime = Date.now();
 
 async function predict() {
@@ -59,30 +55,14 @@ async function predict() {
     prediction.sort((a, b) => b.probability - a.probability);
 
     let top1 = prediction[0];
-    let top2 = prediction[1];
 
-    let gap = top1.probability - top2.probability;
-
-    let emotion = null;
-
-    // 🔥 Smart detection logic (FIXED)
-    if (top1.className === "BigSmile") {
-        if (top1.probability > 0.4) {
-            emotion = top1.className;
-        }
-    } else {
-        if (gap > 0.1 || top1.probability > 0.6) {
-            emotion = top1.className;
-        }
-    }
-
-    // No clear emotion
-    if (emotion === null) {
+    // ✅ SIMPLE FIX (important for BigSmile)
+    if (top1.probability < 0.35) {
         document.getElementById("result").innerText = "Emotion: Detecting...";
-        document.getElementById("status").innerText = "Trying to understand mood...";
         return;
     }
 
+    let emotion = top1.className;
     let now = Date.now();
 
     // stability logic
@@ -99,7 +79,7 @@ async function predict() {
     if (stableTime > requiredTime && candidateEmotion !== currentEmotion) {
         currentEmotion = candidateEmotion;
 
-        console.log("Confirmed Emotion:", currentEmotion);
+        console.log("Emotion:", currentEmotion);
 
         document.getElementById("result").innerText =
             "Emotion: " + currentEmotion;
@@ -125,21 +105,20 @@ function showMusic(emotion) {
     let videoURL = "";
 
     if (emotion === "BigSmile") {
-        videoURL = "https://www.youtube.com/embed/j_3C0z96GE0";
-    }
-    else if (emotion === "Angry") {
         videoURL = "https://www.youtube.com/embed/ZbZSe6N_BXs";
     }
-    else {
+    else if (emotion === "Angry") {
         videoURL = "https://www.youtube.com/embed/Lc9L3uAdcxo";
     }
+    else {
+        videoURL = "https://www.youtube.com/embed/Pu-Ny1L8yDU";
+    }
 
-    // 🚫 Prevent unnecessary reload
+    // prevent unnecessary reload
     if (videoURL === lastVideo) return;
 
     lastVideo = videoURL;
 
-    // ✅ Clean update (no timeout, no flicker)
     musicDiv.innerHTML = `
     <iframe width="350" height="220"
     src="${videoURL}?autoplay=1"
