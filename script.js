@@ -26,7 +26,6 @@ async function init() {
         document.getElementById("startBtn").disabled = true;
         document.getElementById("startBtn").innerText = "Camera Active";
 
-        // Initial status
         document.getElementById("status").innerText = "Analyzing mood...";
 
         window.requestAnimationFrame(loop);
@@ -44,7 +43,7 @@ async function loop() {
 
     setTimeout(() => {
         window.requestAnimationFrame(loop);
-    }, 200); // slower = stable
+    }, 200);
 }
 
 // ================= PREDICTION SYSTEM =================
@@ -57,7 +56,6 @@ let lastUpdateTime = Date.now();
 async function predict() {
     const prediction = await model.predict(webcam.canvas);
 
-    // sort predictions
     prediction.sort((a, b) => b.probability - a.probability);
 
     let top1 = prediction[0];
@@ -65,14 +63,26 @@ async function predict() {
 
     let gap = top1.probability - top2.probability;
 
-    // 🧠 Ignore weak/confusing predictions
-    if (gap < 0.1 && top1.probability < 0.5) {
+    let emotion = null;
+
+    // 🔥 Smart detection logic (FIXED)
+    if (top1.className === "BigSmile") {
+        if (top1.probability > 0.4) {
+            emotion = top1.className;
+        }
+    } else {
+        if (gap > 0.1 || top1.probability > 0.6) {
+            emotion = top1.className;
+        }
+    }
+
+    // No clear emotion
+    if (emotion === null) {
         document.getElementById("result").innerText = "Emotion: Detecting...";
         document.getElementById("status").innerText = "Trying to understand mood...";
         return;
     }
 
-    let emotion = top1.className;
     let now = Date.now();
 
     // stability logic
@@ -91,20 +101,17 @@ async function predict() {
 
         console.log("Confirmed Emotion:", currentEmotion);
 
-        // UI update
         document.getElementById("result").innerText =
             "Emotion: " + currentEmotion;
 
         document.getElementById("status").innerText =
             "Analyzing mood...";
 
-        // background color
         document.body.style.backgroundColor =
             currentEmotion === "BigSmile" ? "#ffe066" :
             currentEmotion === "Angry" ? "#ff6b6b" :
             "#ffffff";
 
-        // play music
         showMusic(currentEmotion);
     }
 }
