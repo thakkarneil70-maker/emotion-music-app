@@ -44,8 +44,8 @@ async function loop() {
 
 // ================= PREDICTION =================
 let currentEmotion = "";
-let lastSwitchTime = 0;
-let switchDelay = 1000; // 1 second cooldown
+let stableCount = 0;
+let lastDetected = "";
 
 async function predict() {
     const prediction = await model.predict(webcam.canvas);
@@ -54,22 +54,27 @@ async function predict() {
 
     let top1 = prediction[0];
 
-    // ignore only very weak predictions
-    if (top1.probability < 0.3) {
+    // ignore weak signals
+    if (top1.probability < 0.4) {
         document.getElementById("result").innerText = "Emotion: Detecting...";
         return;
     }
 
     let emotion = top1.className;
-    let now = Date.now();
 
-    // ⏱️ cooldown system (simple + effective)
-    if (emotion !== currentEmotion && now - lastSwitchTime > switchDelay) {
+    // stability logic (simple counter)
+    if (emotion === lastDetected) {
+        stableCount++;
+    } else {
+        lastDetected = emotion;
+        stableCount = 0;
+    }
 
+    // require 3 consistent frames (~600ms)
+    if (stableCount >= 3 && emotion !== currentEmotion) {
         currentEmotion = emotion;
-        lastSwitchTime = now;
 
-        console.log("Emotion changed:", currentEmotion);
+        console.log("Confirmed:", currentEmotion);
 
         document.getElementById("result").innerText =
             "Emotion: " + currentEmotion;
@@ -81,8 +86,7 @@ async function predict() {
 
         showMusic(currentEmotion);
     }
-}
-// ================= MUSIC =================
+}// ================= MUSIC =================
 let lastVideo = "";
 
 function showMusic(emotion) {
