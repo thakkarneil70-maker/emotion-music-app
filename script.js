@@ -44,10 +44,8 @@ async function loop() {
 
 // ================= PREDICTION =================
 let currentEmotion = "";
-let candidateEmotion = "";
-let stableTime = 0;
-let requiredTime = 800; // faster + stable
-let lastUpdateTime = Date.now();
+let lastSwitchTime = 0;
+let switchDelay = 1000; // 1 second cooldown
 
 async function predict() {
     const prediction = await model.predict(webcam.canvas);
@@ -56,8 +54,8 @@ async function predict() {
 
     let top1 = prediction[0];
 
-    // ✅ SIMPLE FIX (important for BigSmile)
-    if (top1.probability < 0.35) {
+    // ignore only very weak predictions
+    if (top1.probability < 0.3) {
         document.getElementById("result").innerText = "Emotion: Detecting...";
         return;
     }
@@ -65,27 +63,16 @@ async function predict() {
     let emotion = top1.className;
     let now = Date.now();
 
-    // stability logic
-    if (emotion === candidateEmotion) {
-        stableTime += (now - lastUpdateTime);
-    } else {
-        candidateEmotion = emotion;
-        stableTime = 0;
-    }
+    // ⏱️ cooldown system (simple + effective)
+    if (emotion !== currentEmotion && now - lastSwitchTime > switchDelay) {
 
-    lastUpdateTime = now;
+        currentEmotion = emotion;
+        lastSwitchTime = now;
 
-    // confirm stable emotion
-    if (stableTime > requiredTime && candidateEmotion !== currentEmotion) {
-        currentEmotion = candidateEmotion;
-
-        console.log("Emotion:", currentEmotion);
+        console.log("Emotion changed:", currentEmotion);
 
         document.getElementById("result").innerText =
             "Emotion: " + currentEmotion;
-
-        document.getElementById("status").innerText =
-            "Analyzing mood...";
 
         document.body.style.backgroundColor =
             currentEmotion === "BigSmile" ? "#ffe066" :
@@ -95,7 +82,6 @@ async function predict() {
         showMusic(currentEmotion);
     }
 }
-
 // ================= MUSIC =================
 let lastVideo = "";
 
@@ -114,7 +100,6 @@ function showMusic(emotion) {
         videoURL = "https://www.youtube.com/embed/Pu-Ny1L8yDU";
     }
 
-    // prevent unnecessary reload
     if (videoURL === lastVideo) return;
 
     lastVideo = videoURL;
